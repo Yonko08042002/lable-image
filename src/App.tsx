@@ -1,26 +1,73 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Button, Carousel, Typography } from "antd";
+import { useRef } from "react";
 
-function App() {
+import "./App.css";
+import { CarouselRef } from "antd/es/carousel";
+import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+
+export default function App() {
+  const slider = useRef<CarouselRef>(null);
+  interface DataType {
+    key: string;
+    src: string;
+    alt: string;
+  }
+
+  const images: DataType[] = [
+    {
+      key: "1",
+      src: "https://cdn.popsww.com/blog/sites/2/2022/03/Trafalgar-Law-full.jpg",
+      alt: "law",
+    },
+    {
+      key: "2",
+      src: "https://accgroup.vn/wp-content/uploads/2022/01/civil-law-la-gi.jpg",
+      alt: "law1",
+    },
+    {
+      key: "3",
+      src: "https://cdn.popsww.com/blog/sites/2/2022/03/Trafalgar-Law-full.jpg",
+      alt: "1",
+    },
+  ];
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div className="LeftSide">
+        <Typography.Title>MIND SC</Typography.Title>
+      </div>
+
+      <div className="Main">
+        <div className="CenterSide">
+          <Carousel ref={slider}>
+            {images.map((item) => (
+              <img key={item.key} src={item.src} alt={item.alt} />
+            ))}
+          </Carousel>
+          <div className="Btns">
+            <Button
+              onClick={() => {
+                if (slider.current) {
+                  slider.current.prev();
+                }
+              }}
+            >
+              <LeftOutlined />
+            </Button>
+            <Button
+              onClick={() => {
+                if (slider.current) {
+                  slider.current.next();
+                }
+              }}
+            >
+              <RightOutlined />
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div className="RightSide">
+        <Typography.Title level={5}>Danh sách lỗi</Typography.Title>
+      </div>
     </div>
   );
 }
-
-export default App;
