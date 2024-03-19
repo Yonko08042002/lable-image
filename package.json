@@ -16,6 +16,7 @@
     "image-labeler-react": "^1.2.3",
     "konva": "^9.3.6",
     "react": "^18.2.0",
+    "react-carousel": "^4.3.0",
     "react-dom": "^18.2.0",
     "react-image-annotation": "^0.9.10",
     "react-konva": "^18.2.10",

@@ -1,11 +1,18 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Image, Rect, Text } from "react-konva";
 
 const CVAT: React.FC = () => {
-  const [imageUrl, setImageUrl] = useState<string>("");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [boundingBoxes, setBoundingBoxes] = useState<
-    { x: number; y: number; width: number; height: number; label: string }[]
+    Array<
+      Array<{
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        label: string;
+      }>
+    >
   >([]);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [drawingRegion, setDrawingRegion] = useState<{
@@ -19,30 +26,36 @@ const CVAT: React.FC = () => {
     "Label 2": "blue",
     "Label 3": "green",
   });
-  const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
+  const [images, setImages] = useState<HTMLImageElement[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const stageRef = useRef<any>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        if (result && typeof result === "string") {
-          const img = new window.Image();
-          img.src = result;
-          img.onload = () => {
-            setImageObj(img);
-          };
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+  useEffect(() => {
+    const imagePaths = [
+      "https://cdn.popsww.com/blog/sites/2/2022/03/Trafalgar-Law-full.jpg",
+      "https://accgroup.vn/wp-content/uploads/2022/01/civil-law-la-gi.jpg",
+      "https://accgroup.vn/wp-content/uploads/2022/01/civil-law-la-gi.jpg",
+    ];
+
+    Promise.all(imagePaths.map(loadImage)).then((loadedImages) => {
+      setImages(loadedImages);
+      // Initialize boundingBoxes state
+      setBoundingBoxes(new Array(loadedImages.length).fill([]));
+    });
+  }, []);
+
+  const loadImage = (url: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = (err: any) => reject(err);
+      img.src = url;
+    });
   };
 
   const handleStageMouseDown = () => {
-    if (isPaused || !stageRef.current) return; // Check if stageRef.current exists
+    if (isPaused || !stageRef.current) return;
     const pointerPos = stageRef.current.getPointerPosition();
     if (pointerPos) {
       setDrawingRegion({
@@ -67,14 +80,21 @@ const CVAT: React.FC = () => {
           height: Math.abs(pointerPos.y - drawingRegion.startY),
           label: selectedLabel,
         };
-        setBoundingBoxes([...boundingBoxes, newBoundingBox]);
+        setBoundingBoxes((prevBoxes) => {
+          const newBoxes = [...prevBoxes];
+          newBoxes[currentImageIndex] = [
+            ...newBoxes[currentImageIndex],
+            newBoundingBox,
+          ];
+          return newBoxes;
+        });
         setDrawingRegion(null);
       }
     }
   };
 
   const handleMouseMove = () => {
-    if (!isDrawing || isPaused || !stageRef.current) return; // Check if stageRef.current exists
+    if (!isDrawing || isPaused || !stageRef.current) return;
     const pointerPos = stageRef.current.getPointerPosition();
     if (pointerPos) {
       setDrawingRegion((prevRegion) => {
@@ -90,26 +110,47 @@ const CVAT: React.FC = () => {
     setSelectedLabel(label);
   };
 
-  // const handlePause = () => {
-  //   setIsPaused((prevState) => !prevState);
-  // };
   const handlePause = () => {
     setIsPaused((prevState) => {
       if (!prevState) {
-        boundingBoxes.forEach((box, index) => {
-          console.log(`Label: ${box.label}, X: ${box.x}, Y: ${box.y}`);
+        boundingBoxes.forEach((boxes, index) => {
+          console.log(`Image ${index + 1} bounding boxes:`);
+          boxes.forEach((box) => {
+            console.log(`Label: ${box.label}, X: ${box.x}, Y: ${box.y}`);
+          });
         });
       }
       return !prevState;
     });
   };
+
   const handleDeleteAllLabels = () => {
-    setBoundingBoxes([]);
+    setBoundingBoxes((prevBoxes) => {
+      const newBoxes = [...prevBoxes];
+      newBoxes[currentImageIndex] = [];
+      return newBoxes;
+    });
+  };
+
+  const handleImageChange = (index: number) => {
+    setCurrentImageIndex(index);
+  };
+
+  const handleNextImage = () => {
+    if (currentImageIndex < images.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
+    }
+  };
+
+  const handlePreviousImage = () => {
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(currentImageIndex - 1);
+      console.log("hello");
+    }
   };
 
   return (
     <div>
-      <input type="file" accept="image/*" onChange={handleFileChange} />
       <div>
         <Stage
           width={800}
@@ -120,25 +161,35 @@ const CVAT: React.FC = () => {
           ref={stageRef}
         >
           <Layer>
-            {imageObj && <Image image={imageObj} width={800} height={600} />}
-            {boundingBoxes.map((box, index) => (
-              <React.Fragment key={index}>
-                <Rect
-                  x={box.x}
-                  y={box.y}
-                  width={box.width}
-                  height={box.height}
-                  stroke={labelColors[box.label]}
-                  strokeWidth={2}
-                />
-                <Text
-                  text={box.label}
-                  x={box.x}
-                  y={box.y - 20}
-                  fill={labelColors[box.label]}
-                />
-              </React.Fragment>
+            {images.map((image, index) => (
+              <Image
+                key={index}
+                image={image}
+                width={800}
+                height={600}
+                visible={index === currentImageIndex}
+              />
             ))}
+            {boundingBoxes[currentImageIndex] &&
+              boundingBoxes[currentImageIndex].map((box, index) => (
+                <React.Fragment key={index}>
+                  <Rect
+                    x={box.x}
+                    y={box.y}
+                    width={box.width}
+                    height={box.height}
+                    stroke={labelColors[box.label]}
+                    strokeWidth={2}
+                  />
+                  <Text
+                    text={box.label}
+                    x={box.x}
+                    y={box.y - 20}
+                    fill={labelColors[box.label]}
+                  />
+                </React.Fragment>
+              ))}
+
             {drawingRegion && (
               <Rect
                 x={drawingRegion.startX}
@@ -153,15 +204,23 @@ const CVAT: React.FC = () => {
         </Stage>
       </div>
       <div>
+        {images.map((_, index) => (
+          <button key={index} onClick={() => handleImageChange(index)}>
+            Image {index + 1}
+          </button>
+        ))}
+      </div>
+      <div>
         <p>Select a label:</p>
         <button onClick={() => handleLabelSelection("Label 1")}>Label 1</button>
         <button onClick={() => handleLabelSelection("Label 2")}>Label 2</button>
         <button onClick={() => handleLabelSelection("Label 3")}>Label 3</button>
-        {/* Add more labels as needed */}
       </div>
       <div>
         <button onClick={handlePause}>{isPaused ? "Resume" : "Pause"}</button>
-        <button onClick={handleDeleteAllLabels}>Xóa tất cả các nhãn</button>
+        <button onClick={handleDeleteAllLabels}>Delete All Labels</button>
+        <button onClick={handleNextImage}>Next</button>
+        <button onClick={handlePreviousImage}>Prev</button>
       </div>
     </div>
   );

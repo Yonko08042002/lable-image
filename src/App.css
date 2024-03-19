@@ -16,6 +16,20 @@
   background: #2a2a2a;
   color: white;
 }
+.list-images {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.list-images button {
+  width: 80%;
+  font-size: 1.4rem;
+}
+
 .Main {
   width: 60%;
   display: flex;
@@ -24,13 +38,9 @@
   padding: 2rem 0.5rem 2rem 0.5rem;
 }
 .CenterSide {
-  width: 60rem;
-  height: 30rem;
-  background: orange;
-}
-.CenterSide img {
-  width: 60rem;
-  height: 30rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .Btns {
@@ -51,4 +61,16 @@
   padding: 0.3rem;
   background: #2a2a2a;
   color: white;
+}
+.list-lables {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+.list-lables button {
+  width: 80%;
+  font-size: 1.4rem;
 }
