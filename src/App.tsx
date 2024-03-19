@@ -4,7 +4,6 @@ import { useRef } from "react";
 import "./App.css";
 import { CarouselRef } from "antd/es/carousel";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
-import LabelingCanvas from "./LabelingCanvas";
 
 export default function App() {
   const slider = useRef<CarouselRef>(null);
@@ -14,7 +13,7 @@ export default function App() {
     alt: string;
   }
 
-  const images = [
+  const images: DataType[] = [
     {
       key: "1",
       src: "https://cdn.popsww.com/blog/sites/2/2022/03/Trafalgar-Law-full.jpg",
@@ -31,7 +30,6 @@ export default function App() {
       alt: "1",
     },
   ];
-
   return (
     <div className="App">
       <div className="LeftSide">
@@ -42,9 +40,7 @@ export default function App() {
         <div className="CenterSide">
           <Carousel ref={slider}>
             {images.map((item) => (
-              <div key={item.key}>
-                <LabelingCanvas imageUrl={item.src} />
-              </div>
+              <img key={item.key} src={item.src} alt={item.alt} />
             ))}
           </Carousel>
           <div className="Btns">
